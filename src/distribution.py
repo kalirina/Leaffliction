@@ -2,6 +2,16 @@ import sys
 import os
 from matplotlib import pyplot as plt
 import glob
+import json
+
+
+def save_stats():
+    stats = {}
+    for dir in glob.glob("data/leaves/images/*"):
+        if os.path.isdir(dir):
+            stats[os.path.basename(dir)] = len(os.listdir(dir))
+    with open("data/stats.json", "w") as file:
+        json.dump(stats, file, indent=4)
 
 
 def main():
@@ -23,6 +33,7 @@ def main():
     ax[1].set_axisbelow(True)
     ax[1].set_facecolor("#E5ECF6")
     plt.savefig("graphs/" + sys.argv[1] + "_distribution.png")
+    save_stats()
 
 
 if __name__ == '__main__':

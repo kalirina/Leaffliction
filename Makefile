@@ -13,6 +13,7 @@ install:
 
 clean:
 	rm -rf graphs/*
+	rm -rf data/stats.json
 	rm -rf data/augmented_directory
 
 fclean: clean
