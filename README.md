@@ -14,13 +14,19 @@ Install and activate virtual environment:
 make
 ```
 ```bash
-source venv/bin/activate
+source ~/goinfre/leaf_venv/bin/activate
 ```
 
 Analysis of the Data Set:
 
 ```bash
 python src/distribution.py Apple
+```
+
+Data augmentation:
+
+```bash
+python src/augmentation.py
 ```
 
 ---
@@ -31,6 +37,7 @@ python src/distribution.py Apple
 
 * Python
 * Matplotlib
+* PyTorch
 
 ### Articles & Tutorials
 
