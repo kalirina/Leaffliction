@@ -1,9 +1,16 @@
 from torchvision.transforms import v2
 from PIL import Image
 import os
+import json
 
 
 def main():
+    if not os.path.exists("data/stats.json"):
+        print("Run distribution.py first")
+        return
+    with open("data/stats.json","r") as file:
+        stats = json.load(file)
+        
     data_dir = "data/leaves/images"
     augmented_dir = "data/augmented_directory"
     transforms = {
