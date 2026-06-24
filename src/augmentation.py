@@ -2,6 +2,8 @@ from torchvision.transforms import v2
 from PIL import Image
 import os
 import json
+import shutil
+import random
 
 
 def main():
@@ -10,9 +12,10 @@ def main():
         return
     with open("data/stats.json","r") as file:
         stats = json.load(file)
-        
+    max_distrib = max(stats.values())
+
     data_dir = "data/leaves/images"
-    augmented_dir = "data/augmented_directory"
+    aug_dir = "data/augmented_directory"
     transforms = {
         "Flip":v2.RandomHorizontalFlip(p=1.0),
         "Rotate":v2.RandomRotation(degrees=45),
@@ -21,15 +24,29 @@ def main():
         "Crop": v2.RandomResizedCrop(size=(224, 224), scale=(0.5, 0.8)),
         "Distortion":v2.ElasticTransform(alpha=50.0)
     }
-    ex_p = "data/leaves/images/Apple_Black_rot/image (1).JPG"
-    img = Image.open(ex_p).convert("RGB")
-    os.makedirs(augmented_dir, exist_ok=True)
-    for t_name, transform in transforms.items():
-        out_img = transform(img)
-        out_img.save("data/augmented_directory/image (1)_" + t_name + ".JPG")
-    # for class_dir in os.listdir(data_dir):
-    #     for file in os.listdir("data/leaves/images/" + dir):
-    #         img = Image.open(img_path).convert("RGB")
+
+    for class_dir in os.listdir(data_dir):
+        class_path = os.path.join(data_dir, class_dir)
+        aug_class_path = os.path.join(aug_dir, class_dir)
+        os.makedirs(aug_class_path, exist_ok=True)
+        files = os.listdir(class_path)
+        for file in files:
+            shutil.copy2(os.path.join(class_path, file),os.path.join(aug_class_path, file))
+        miss_distrib = max_distrib - stats[class_dir]
+        generated = 0
+        for file in os.listdir(class_path):
+            if generated >= miss_distrib:
+                break
+            img = Image.open(os.path.join(class_path, file)).convert("RGB")
+            name, _ = os.path.splitext(file)
+            for t_name, transform in transforms.items():
+                if generated >= miss_distrib:
+                    break
+                out_img = transform(img)
+                out_path = os.path.join(aug_class_path,f"{name}_{t_name}.JPG")
+                out_img.save(out_path)
+                generated += 1
+
 
 if __name__ == '__main__':
     main()

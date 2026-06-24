@@ -15,7 +15,11 @@ def save_stats():
 
 
 def create_graph(plant):
-    path = f"data/leaves/images/{plant}_*"
+    path = ""
+    if os.path.exists("data/augmented_directory"):
+        path = f"data/augmented_directory/{plant}_*"
+    else:
+        path = f"data/leaves/images/{plant}_*"
     data = []
     for dir in glob.glob(path):
         count = len(os.listdir(dir))
@@ -28,7 +32,10 @@ def create_graph(plant):
     ax[1].grid(axis='y')
     ax[1].set_axisbelow(True)
     ax[1].set_facecolor("#E5ECF6")
-    plt.savefig(f"graphs/{plant}_distribution.png")
+    if os.path.exists("data/augmented_directory"):
+        plt.savefig(f"graphs/{plant}_augmented_distribution.png")
+    else:
+        plt.savefig(f"graphs/{plant}_distribution.png")
     plt.close()
 
 
