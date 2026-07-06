@@ -81,7 +81,7 @@ def transform_image(img_path, dest_dir=None):
 
     # 1. Processing pipeline
     blurred_img = pcv.gaussian_blur(img=img, ksize=(11, 11), sigma_x=0, sigma_y=None)
-    b_channel = pcv.rgb2gray_lab(rgb_img=blurred_img, channel='b')
+    b_channel = pcv.rgb2gray_lab(rgb_img=img, channel='b')
 
     # This raw mask represents Figure IV.2 in your screenshot
     raw_mask = pcv.threshold.binary(gray_img=b_channel, threshold=115, object_type='light')
