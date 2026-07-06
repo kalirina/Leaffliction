@@ -18,10 +18,13 @@ def generate_histogram(img, mask):
     fig, ax = plt.subplots(figsize=(10, 6))
     fig.suptitle("Color Histogram", fontsize=14, fontweight='bold')
 
+    rgb_channels = ['Red', 'Green', 'Blue']
+    hsv_channels = ['Hue', 'Saturation', 'Value']
+    lab_channels = ['Lightness', 'Green-Magenta', 'Blue-Yellow']
     color_data = [
-        (rgb_img, ['Red', 'Green', 'Blue'], ['red', 'green', 'blue']),
-        (hsv_img, ['Hue', 'Saturation', 'Value'], ['purple', 'cyan', 'gray']),
-        (lab_img, ['Lightness', 'Green-Magenta', 'Blue-Yellow'], ['black', 'magenta', 'gold'])
+        (rgb_img, rgb_channels, ['red', 'green', 'blue']),
+        (hsv_img, hsv_channels, ['purple', 'cyan', 'gray']),
+        (lab_img, lab_channels, ['black', 'magenta', 'gold'])
     ]
 
     for img_space, channel_names, colors in color_data:
@@ -85,37 +88,45 @@ def transform_image(img_path, dest_dir=None):
     # Basic image process process pipeline
     # We blur the image, then extract b_channel from lab format and build
     # the mask from that (white where b value its high)
-    blurred_img = pcv.gaussian_blur(img=img, ksize=(11, 11), sigma_x=0, sigma_y=None)
+    blurred_img = pcv.gaussian_blur(img=img, ksize=(11, 11),
+                                    sigma_x=0, sigma_y=None)
     b_channel = pcv.rgb2gray_lab(rgb_img=blurred_img, channel='b')
     raw_mask = pcv.threshold.otsu(gray_img=b_channel, object_type='light')
     clean_mask = pcv.fill(bin_img=raw_mask, size=50)
     clean_mask = pcv.fill_holes(bin_img=clean_mask)
 
     # ROI Object filtering
-    # We select our Region Of Interest by placing a square centered on the image
-    # anything that is not inside the square gets filtered out
-    roi_x, roi_y, roi_w, roi_h = width//6, height//6, (width//6)*4, (height//6)*4
+    # We select our Region Of Interest by placing a square centered on the
+    # image anything that is not inside the square gets filtered out
+    roi_x, roi_y = width//6, height//6
+    roi_w, roi_h = (width//6)*4, (height//6)*4
     roi = pcv.roi.rectangle(img=img, x=roi_x, y=roi_y, h=roi_h, w=roi_w)
-    filtered_mask = pcv.roi.filter(mask=clean_mask, roi=roi, roi_type='partial')
+    filtered_mask = pcv.roi.filter(mask=clean_mask, roi=roi,
+                                   roi_type='partial')
 
     # Shape Analysis
-    # First we label (separate) the different objects we have in the mask, based 
-    # on wether the pixels touch eachother or not, then we pass the label and mask
-    # to .size which calculates area, perimeter, center of mass etc and returns
-    # the image with these data draw 
+    # First we label (separate) the different objects we have in the mask,
+    # based on wether the pixels touch eachother or not, then we pass the
+    # label and mask to .size which calculates area, perimeter, center
+    # of mass etc and returns the image with these data draw
     labeled_mask, num_objects = pcv.create_labels(mask=filtered_mask)
     shape_image = pcv.analyze.size(img=img, labeled_mask=labeled_mask)
 
     # Images preparation before displaying
     masked_img = img.copy()
-    masked_img[clean_mask == 0] = [255, 255, 255] # Paint background pixels white
+    # Paint bg pixels white
+    masked_img[clean_mask == 0] = [255, 255, 255]
 
     roi_objects_img = img.copy()
-    roi_objects_img[filtered_mask > 0] = [0, 255, 0] # Paint plant pixels green
-    cv2.rectangle(roi_objects_img, (roi_x, roi_y), (roi_x + roi_w, roi_y + roi_h), (255, 0, 0), 4) # Blue box
+    # Paint plant pixels green
+    roi_objects_img[filtered_mask > 0] = [0, 255, 0]
+    cv2.rectangle(roi_objects_img, (roi_x, roi_y), (roi_x + roi_w,
+                  roi_y + roi_h), (255, 0, 0), 4)  # Blue box
 
-    # Pseudolandmarks 
-    left, right, center = pcv.homology.y_axis_pseudolandmarks(img=img, mask=filtered_mask)
+    # Pseudolandmarks
+    left, right, center = pcv.homology.y_axis_pseudolandmarks(
+        img=img, mask=filtered_mask
+        )
     landmark_img = img.copy()
 
     point_styles = [
@@ -126,7 +137,8 @@ def transform_image(img_path, dest_dir=None):
     for color, points in point_styles:
         for pt in points:
             x, y = np.array(pt).flatten()[:2]
-            cv2.circle(landmark_img, (int(x), int(y)), radius=5, color=color, thickness=-1)
+            cv2.circle(landmark_img, (int(x), int(y)), radius=5,
+                       color=color, thickness=-1)
 
     # Histogram
     hist_fig = generate_histogram(img=img, mask=filtered_mask)
@@ -150,9 +162,11 @@ def transform_image(img_path, dest_dir=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="TransformImage", description="Transform images")
+    parser = argparse.ArgumentParser(prog="TransformImage",
+                                     description="Transform images")
     parser.add_argument("src", type=str, help="Source directory or file path")
-    parser.add_argument("-dst", type=str, default=None, help="Path to save the output")
+    parser.add_argument("-dst", type=str, default=None,
+                        help="Path to save the output")
 
     args = parser.parse_args()
     valid_exts = ('.png', '.jpg', '.jpeg')
@@ -176,6 +190,7 @@ def main():
             if file.lower().endswith(valid_exts):
                 full_path = os.path.join(args.src, file)
                 transform_image(full_path, args.dst)
+
 
 if __name__ == "__main__":
     try:
