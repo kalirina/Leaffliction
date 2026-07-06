@@ -6,9 +6,10 @@ VENV = ~/goinfre/leaf_venv
 all: install
 
 install:
-	python3 -m venv $(VENV)
+	python -m venv $(VENV)
 	$(VENV)/bin/pip install --upgrade pip
 	$(VENV)/bin/pip install -r requirements.txt
+	$(VENV)/bin/pip install plantcv
 	$(VENV)/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
 clean:

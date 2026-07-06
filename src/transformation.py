@@ -79,26 +79,27 @@ def transform_image(img_path, dest_dir=None):
     img, path, filename = pcv.readimage(filename=img_path)
     height, width, _ = img.shape
 
-    # 1. Processing pipeline
+    # Basic image process process pipeline
+    # We blur the image, then extract b_channel from lab format and build
+    # the mask from that (white where b value its high)
     blurred_img = pcv.gaussian_blur(img=img, ksize=(11, 11), sigma_x=0, sigma_y=None)
-    b_channel = pcv.rgb2gray_lab(rgb_img=img, channel='b')
+    b_channel = pcv.rgb2gray_lab(rgb_img=blurred_img, channel='b')
+    raw_mask = pcv.threshold.otsu(gray_img=b_channel, object_type='light')
+    clean_mask = pcv.fill(bin_img=raw_mask, size=50)
 
-    # This raw mask represents Figure IV.2 in your screenshot
-    raw_mask = pcv.threshold.binary(gray_img=b_channel, threshold=115, object_type='light')
-    clean_mask = pcv.fill(bin_img=raw_mask, size=200)
-
-    # 2. ROI Object filtering
-    roi_x, roi_y, roi_w, roi_h = width//4, height//4, width//2, height//2
+    # ROI Object filtering
+    # We select our Region Of Interest by placing a square centered on the image
+    # anything that is not inside the square gets filtered out
+    roi_x, roi_y, roi_w, roi_h = width//6, height//6, (width//6)*4, (height//6)*4
     roi = pcv.roi.rectangle(img=img, x=roi_x, y=roi_y, h=roi_h, w=roi_w)
     filtered_mask = pcv.roi.filter(mask=clean_mask, roi=roi, roi_type='partial')
 
-    # 3. Shape Analysis (Figure IV.5)
+    # Shape Analysis
+    # First we label the different objects we have in the mask, based on wether
+    # the pixels touch eachother or not, then we 
     labeled_mask, num_objects = pcv.create_labels(mask=filtered_mask)
     shape_image = pcv.analyze.size(img=img, labeled_mask=labeled_mask)
 
-    # --- CUSTOM VISUALIZATIONS FOR ASSIGNMENT --- #
-
-    # Figure IV.3: Mask (Original image with white background)
     masked_img = img.copy()
     masked_img[clean_mask == 0] = [255, 255, 255] # Turn background pixels white
 
@@ -128,7 +129,7 @@ def transform_image(img_path, dest_dir=None):
     # --- DICTIONARY MATCHING SCREENSHOT --- #
     images_to_display = {
         "Figure IV.1: Original": img,
-        "Figure IV.2: Gaussian blur": raw_mask,
+        "Figure IV.2: Gaussian blur": clean_mask,
         "Figure IV.3: Mask": masked_img,
         "Figure IV.4: Roi objects": roi_objects_img,
         "Figure IV.5: Analyze object": shape_image,
