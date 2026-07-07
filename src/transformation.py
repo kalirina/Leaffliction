@@ -112,6 +112,10 @@ def transform_image(img_path, dest_dir=None):
     labeled_mask, num_objects = pcv.create_labels(mask=filtered_mask)
     shape_image = pcv.analyze.size(img=img, labeled_mask=labeled_mask)
 
+    # Quantitative Color Analysis
+    # Extract median, mean and standard deviation for RGB, HSV and LAB
+    color_histogram_img = pcv.analyze.color(rgb_img=img, labeled_mask=filtered_mask, colorspaces="all")
+
     # Images preparation before displaying
     masked_img = img.copy()
     # Paint bg pixels white
@@ -158,8 +162,13 @@ def transform_image(img_path, dest_dir=None):
         hist_fig.savefig(hist_path)
         plt.close(hist_fig)
 
+        csv_path = os.path.join(dest_dir, f"{base_name}_measurements.csv")
+        pcv.outputs.save_results(filename=csv_path, outformat="csv")
+        print(f"Saved numerical measurements to: {csv_path}")
+
     display_transformations(images_to_display, dest_dir, base_name)
 
+    pcv.outputs.clear()
 
 def main():
     parser = argparse.ArgumentParser(prog="TransformImage",
