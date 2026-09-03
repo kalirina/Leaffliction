@@ -1,16 +1,16 @@
-PYTHON = ~/goinfre/leaf_venv/bin/python
 VENV = ~/goinfre/leaf_venv
+PYTHON = $(VENV)/bin/python
 
-.PHONY: all install clean
+.PHONY: all install clean fclean
 
 all: install
 
 install:
-	python -m venv $(VENV)
-	$(VENV)/bin/pip install --upgrade pip
-	$(VENV)/bin/pip install -r requirements.txt
-	$(VENV)/bin/pip install plantcv
-	$(VENV)/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+	uv python install 3.12
+	uv venv --python 3.12 $(VENV)
+	uv pip install --python $(PYTHON) -r requirements.txt
+	uv pip install --python $(PYTHON) plantcv
+	uv pip install --python $(PYTHON) torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
 clean:
 	rm -rf graphs/*
